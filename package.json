@@ -1,0 +1,18 @@
+{
+  "author": "Lcf.vs <michael.rouges@gmail.com>",
+  "name": "queue.io",
+  "description": "An events based queue iteration JavaScript module",
+  "homepage": "https://github.com/Lcfvs/",
+  "keywords": ["queue", "iterable", "iteration", "iterator", "iterate", "event", "evented", "asynchronous"],
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Lcfvs/queue.io.git"
+  },
+  "main": "queue.io.js",
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
