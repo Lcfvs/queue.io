@@ -87,3 +87,4 @@ Requirements :
 --------------
 
 - <b>ES5</b> support
+- <b>events.EventEmitter</b>
