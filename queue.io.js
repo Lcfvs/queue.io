@@ -68,13 +68,13 @@ queue = (function () {
                 onerror;
 
             emitter = new EventEmitter();
+            ondone = onhandlerdone.bind(handler, emitter, iterable);
 
             if (handler.done) {
                 ondone.call(handler, emitter, iterable);
             } else {
                 handlerEmitter = handler.emitter;
 
-                ondone = onhandlerdone.bind(handler, emitter, iterable);
                 onerror = this.emit.bind(this, 'error');
 
                 handlerEmitter.once('done', ondone);
