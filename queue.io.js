@@ -9,12 +9,16 @@ queue = (function () {
     'use strict';
 
     var EventEmitter,
+        originalGlobalValue,
         defer,
         queue,
         iterate,
         Iterator;
 
     EventEmitter = require('events').EventEmitter;
+
+    originalGlobalValue = typeof exports === 'object'
+    && exports.queue;
 
     defer = (typeof setImmediate === 'function' && setImmediate)
     || (typeof process === 'object' && process.nextTick)
@@ -199,12 +203,18 @@ queue = (function () {
     }());
 
     queue.iterate = iterate;
+    
+    queue.noConflict = function noConflict() {
+        exports.queue = originalGlobalValue;
+        
+        return queue;
+    };
 
     if (typeof module === 'object' && module.exports !== undefined) {
         module.exports = queue;
     } else if (typeof define == 'function' && typeof define.amd == 'object') {
-        define(function (require, exports, module) {
-            module.exports = queue;
+        define(function () {
+            return queue;
         });
     } else {
         this.queue = queue;
