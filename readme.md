@@ -3,7 +3,7 @@ queue.io
 
 [![Actual version published on NPM](https://badge.fury.io/js/queue.io.png)](https://www.npmjs.org/package/queue.io)
 [![npm module downloads per month](http://img.shields.io/npm/dm/queue.io.svg)](https://www.npmjs.org/package/queue.io)
-[![npm module dependencies](https://david-dm.org/Lcfvs/queue.io)](https://www.npmjs.org/package/queue.io)
+[![npm module dependencies](https://david-dm.org/Lcfvs/queue.io.png)](https://www.npmjs.org/package/queue.io)
 
 An events based queue iteration JavaScript module, under the MIT license.
 
