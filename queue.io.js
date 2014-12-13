@@ -3,7 +3,6 @@ Copyright 2014 Lcf.vs
 Released under the MIT license
 https://github.com/Lcfvs/queue.io
 */
-
 var queue;
 
 queue = (function (global) {
@@ -59,11 +58,7 @@ queue = (function (global) {
             iterable.iterate = function iterate(direction) {
                 var iterator;
 
-                if (direction === queue.PREV) {
-                    values.reverse();
-                }
-
-                iterator = Iterator(values, eventName, iterable);
+                iterator = Iterator(values, eventName, iterable, direction);
 
                 if (handler.done) {
                     defer(values.next);
@@ -119,20 +114,29 @@ queue = (function (global) {
             handler.done = true;
         };
 
-        Iterator = function Iterator(values, event, iterable) {
+        Iterator = function Iterator(values, event, iterable, direction) {
             var index,
                 iterator,
-                next;
+                next,
+                iterationValues;
 
             index = 0;
             iterator = new EventEmitter();
 
             next = function next() {
+                if (!iterationValues) {
+                    iterationValues = values.slice(0);
+
+                    if (direction === queue.PREV) {
+                        iterationValues.reverse();
+                    }
+                }
+                
                 defer(function () {
-                    if (index >= values.length) {
+                    if (index >= iterationValues.length) {
                         iterator.emit('done', iterable);
                     } else {
-                        iterator.emit(event, values[index], next, iterable);
+                        iterator.emit(event, iterationValues[index], next, iterable);
                     }
 
                     index += 1;
