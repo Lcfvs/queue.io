@@ -62,18 +62,20 @@ iterator = iterable.iterate([direction = queue.NEXT]);
 ```JavaScript
 var EventEmitter,
     queue,
+    eventName,
     eventEmitter,
     iterable;
 
 EventEmitter = require('events').EventEmitter;
 queue = require('queue.io');
 
+eventName = 'value'; // the default event name
 eventEmitter = new EventEmitter();
 iterable = queue(eventEmitter);
 
-eventEmitter.emit('value', 1);
-eventEmitter.emit('value', 2);
-eventEmitter.emit('value', 3);
+eventEmitter.emit(eventName, 1);
+eventEmitter.emit(eventName, 2);
+eventEmitter.emit(eventName, 3);
 
 eventEmitter.emit('done');
 ```
@@ -85,7 +87,7 @@ var iterator;
 
 iterator = iterable.iterate();
 
-iterator.on('value', function onvalue(value, next, iterable) {
+iterator.on(eventName, function onvalue(value, next, iterable) {
     console.log('Iteration value = %d on :', value, iterable);
 
     next();
