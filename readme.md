@@ -1,4 +1,5 @@
-# queue.io
+queue.io
+========
 
 [![Actual version published on NPM](https://badge.fury.io/js/queue.io.png)](https://www.npmjs.org/package/queue.io)
 [![npm module downloads per month](http://img.shields.io/npm/dm/queue.io.svg)](https://www.npmjs.org/package/queue.io)
@@ -7,106 +8,87 @@
 An events based queue iteration JavaScript module, under the MIT license.
 
 
-## Install :
+Install :
+---------
 
 `npm install queue.io`
 
 
-## Reference :
-
-### Create an iterable :
-
-```JavaScript
-var iterable;
-
-iterable = queue(eventEmitter, [eventName = 'value']);
-// or
-iterable = queue.enqueue(arrayLike, [eventName = 'value']);
-```
-
-#### Notes :
-* An iterable is an object that awaits 2 event types :
-  * eventName to fill the iterable
-  * `done` (once) to indicate a done state to all the iterable iterators
-* `queue.enqueue(arrayLike)` creates an auto-done iterable, it must be an array-like object<br />
-  (Array, DOM NodeList, ...)
-
-### Directions :
-
-* `queue.NEXT` : used to indicate the direction to the current iterator, first -> last
-* `queue.PREV` : used to indicate the direction to the current iterator, last -> first
-
-### Create an iterator :
+Usage :
+-------
 
 ```JavaScript
-var iterator;
+void function () {
+    'use strict';
 
-iterator = iterable.iterate([direction = queue.NEXT]);
+    var EventEmitter,
+        queue,
+        valueEmitter,
+        iterable,
+        iterator;
+
+    EventEmitter = require('events').EventEmitter;
+    queue = require('queue.io');
+
+    // an emitter that receives the values
+    valueEmitter = new EventEmitter();
+    // an iterable instance
+    iterable = queue(valueEmitter);
+    // a values iterator (it awaits the 'done' event on the valueEmitter)
+    iterator = iterable.iterate();
+
+    // listening the iteration's values
+    iterator.on('value', function onvalue(value, next) {
+        console.log('iteration value = %d', value);
+
+        next();
+    });
+
+    // listening the iteration's end
+    iterator.on('done', function ondone() {
+        console.log('iteration done');
+    });
+
+    // adding values
+    valueEmitter.emit('value', 1);
+    valueEmitter.emit('value', 2);
+    valueEmitter.emit('value', 3);
+    
+    // sends the values list end
+    valueEmitter.emit('done');
+}();
 ```
 
-### Iterator events :
 
-* `eventName` :
-  * `value'    : the current value
-  * `next`     : a method to jump to the next iteration
-  * `iterable` : the current iterable
-
-* `done` :
-  * `iterable` : the current iterable
-
-#### Note :
-* `eventName` is related to the `eventName` passed at the iterable creation (default : 'value')
-
-### Fill a queue :
+Iterate on an array-like object :
+---------------------------------
 
 ```JavaScript
-var EventEmitter,
-    queue,
-    eventEmitter,
-    iterable;
+void function () {
+    'use strict';
 
-EventEmitter = require('events').EventEmitter;
-queue = require('queue.io');
+    var iterate,
+        iterator;
 
-eventEmitter = new EventEmitter();
-iterable = queue(eventEmitter);
+    iterate = require('queue.io').iterate;
 
-eventEmitter.emit('value', 1);
-eventEmitter.emit('value', 2);
-eventEmitter.emit('value', 3);
+    iterator = iterate([1, 2, 3]);
 
-eventEmitter.emit('done');
+    iterator.on('value', function onvalue(value, next) {
+        console.log('iteration value = %d', value);
+
+        next();
+    });
+
+    iterator.on('done', function ondone() {
+        console.log('iteration done');
+    });
+}();
 ```
 
-### Listen an iterator :
 
-```JavaScript
-var iterator;
+Requirements :
+--------------
 
-iterator = iterable.iterate();
-
-iterator.on('value', function onvalue(value, next, iterable) {
-    console.log('Iteration value = %d on :', value, iterable);
-
-    next();
-});
-
-iterator.on('done', function (iterable) {
-    console.log('Iterator done on :', iterable);
-});
-```
-
-#### Note :
-* The iterator creation isn't dependent to the iterable state, then you can create them before and/or after the iterable done state
-
-
-## Requirements :
-
-* ES5 support
-* Module loader
-* [EventEmitter](https://github.com/Wolfy87/EventEmitter)
-
-
-## Browser-side, without module loader :
-
-You need to have a scoped property that contains EventEmitter, like `window.events.EventEmitter` or `window.EventEmitter`
+- <b>ES5</b> support
+- <b>events.EventEmitter</b>
