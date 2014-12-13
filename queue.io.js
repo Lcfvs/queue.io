@@ -60,7 +60,7 @@ queue = (function (global) {
                 var iterator;
 
                 if (direction === queue.PREV) {
-                    iterationValues.reverse();
+                    values.reverse();
                 }
 
                 iterator = Iterator(values, eventName, iterable);
