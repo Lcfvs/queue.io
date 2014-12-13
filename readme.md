@@ -71,7 +71,7 @@ queue = require('queue.io');
 
 eventName = 'value'; // the default event name
 eventEmitter = new EventEmitter();
-iterable = queue(eventEmitter);
+iterable = queue(eventEmitter, eventName);
 
 eventEmitter.emit(eventName, 1);
 eventEmitter.emit(eventName, 2);
