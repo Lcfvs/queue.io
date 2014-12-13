@@ -103,7 +103,6 @@ iterator.on('done', function (iterable) {
 ## Requirements :
 
 * ES5 support
-* Module loader
 * [EventEmitter](https://github.com/Wolfy87/EventEmitter)
 
 
