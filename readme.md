@@ -30,7 +30,7 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 
 #### Notes :
 * An queue is an object that awaits 2 event types :
-  * eventName to fill the queue
+  * `eventName` to fill the queue
   * `done` (once) to indicate a done state to all the queue iterators
 * `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
@@ -110,15 +110,13 @@ iterator.on('done', function (queue) {
 ## Requirements :
 
 * ES5 support
-* [EventEmitter](https://github.com/Wolfy87/EventEmitter)
 
 
-## Browser-side, without module loader :
+## Browser-side :
 
-You need to have a scoped property that contains EventEmitter, like `window.events.EventEmitter` or `window.EventEmitter`
+Simply use the browserified version
 
 ```HTML
-<script src="https://raw.githubusercontent.com/Wolfy87/EventEmitter/master/EventEmitter.min.js"></script>
-<script src="https://raw.githubusercontent.com/Lcfvs/queue.io/master/queue.io.min.js"></script>
+<script src="https://raw.githubusercontent.com/Lcfvs/queue.io/master/queue.io.browserified.js"></script>
 <script src="your-script-path.js"></script>
 ```
