@@ -1,11 +1,11 @@
 /*
 Copyright 2014 Lcf.vs
 Released under the MIT license
-https://github.com/Lcfvs/queue.io
+https://github.com/Lcfvs/Queue.io
 */
-var queue;
+var Queue;
 
-queue = (function (global) {
+Queue = (function (global) {
     'use strict';
 
     var main;
@@ -14,15 +14,15 @@ queue = (function (global) {
         var EventEmitter,
             originalGlobalValue,
             defer,
-            queue,
-            onqueuevalue,
-            onqueuedone,
+            Queue,
+            onQueuevalue,
+            onQueuedone,
             Iterator;
 
         EventEmitter = require('events').EventEmitter;
 
         originalGlobalValue = typeof exports === 'object'
-        && exports.queue;
+        && exports;
 
         defer = (typeof setImmediate === 'function' && setImmediate)
         || (typeof process === 'object' && process.nextTick)
@@ -30,15 +30,18 @@ queue = (function (global) {
             setTimeout(closure, 0);
         };
 
-        queue = function queue(emitter, event) {
-            var iterable,
+        Queue = function Queue(emitter, event) {
+            var queue,
                 values,
                 eventName,
                 handler,
                 onvalue,
-                ondone;
+                ondone,
+                onerror;
 
-            iterable = Object.create(queue.prototype);
+            queue = this instanceof Queue
+                ? this
+                : Object.create(Queue.prototype);
 
             values = [];
 
@@ -49,16 +52,18 @@ queue = (function (global) {
                 done: false
             };
 
-            onvalue = onqueuevalue.bind(values);
-            ondone = onqueuedone.bind(emitter, handler, eventName, onvalue);
+            onvalue = onQueuevalue.bind(values);
+            ondone = onQueuedone.bind(emitter, handler, eventName, onvalue);
+            onerror = queue.emit.bind(queue, 'error');
 
             emitter.on(eventName, onvalue);
             emitter.once('done', ondone);
+            emitter.once('error', onerror);
 
-            iterable.iterate = function iterate(direction) {
+            queue.iterate = function iterate(direction) {
                 var iterator;
 
-                iterator = Iterator(values, eventName, iterable, direction);
+                iterator = Iterator(values, eventName, queue, direction);
 
                 if (handler.done) {
                     defer(values.next);
@@ -69,29 +74,28 @@ queue = (function (global) {
                 return iterator;
             };
 
-            return iterable;
+            return queue;
         };
 
-        queue.prototype = Object.create(EventEmitter.prototype, {
+        Queue.prototype = Object.create(EventEmitter.prototype, {
             constructor: {
-                value: queue,
+                value: Queue,
                 writable: true,
-                enumerable: false,
                 configurable: true
             }
         });
 
-        queue.enqueue = function enqueue(values, eventName) {
+        Queue.from = function from(values, eventName) {
             var index,
                 length,
                 valueEmitter,
-                iterable,
+                queue,
                 value;
 
             index = 0;
             length = values.length;
             valueEmitter = new EventEmitter();
-            iterable = queue(valueEmitter, eventName);
+            queue = Queue(valueEmitter, eventName);
 
             for (; index < length; index += 1) {
                 value = values[index];
@@ -101,20 +105,20 @@ queue = (function (global) {
 
             valueEmitter.emit('done');
 
-            return iterable;
+            return queue;
         };
 
-        onqueuevalue = function onqueuevalue(value) {
+        onQueuevalue = function onQueuevalue(value) {
             this.push(value);
         };
 
-        onqueuedone = function onqueuedone(handler, event, listener) {
+        onQueuedone = function onQueuedone(handler, event, listener) {
             this.removeListener(event, listener);
 
             handler.done = true;
         };
 
-        Iterator = function Iterator(values, event, iterable, direction) {
+        Iterator = function Iterator(values, event, queue, direction) {
             var index,
                 iterator,
                 next,
@@ -127,16 +131,16 @@ queue = (function (global) {
                 if (!iterationValues) {
                     iterationValues = values.slice(0);
 
-                    if (direction === queue.PREV) {
+                    if (direction === Queue.PREV) {
                         iterationValues.reverse();
                     }
                 }
                 
                 defer(function () {
                     if (index >= iterationValues.length) {
-                        iterator.emit('done', iterable);
+                        iterator.emit('done', queue);
                     } else {
-                        iterator.emit(event, iterationValues[index], next, iterable);
+                        iterator.emit(event, iterationValues[index], next, queue);
                     }
 
                     index += 1;
@@ -148,23 +152,23 @@ queue = (function (global) {
             return iterator;
         };
 
-        Object.defineProperty(queue, 'NEXT', {
-            value: 1,
-            iterable: true
+        Object.defineProperty(Queue, 'NEXT', {
+            value: {},
+            enumerable: true
         });
 
-        Object.defineProperty(queue, 'PREV', {
-            value: -1,
-            iterable: true
+        Object.defineProperty(Queue, 'PREV', {
+            value: {},
+            enumerable: true
         });
 
-        queue.noConflict = function noConflict() {
-            exports.queue = originalGlobalValue;
+        Queue.noConflict = function noConflict() {
+            module.exports = originalGlobalValue;
 
-            return queue;
+            return Queue;
         };
 
-        return queue;
+        return Queue;
     };
 
     if (typeof define == 'function' && typeof define.amd == 'object') {

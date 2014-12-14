@@ -8,7 +8,7 @@ An events based queue iteration JavaScript module, under the MIT license.
 
 This tool is useful when in combination of your asynchronous operations, when you need to wait the entire queue to iterate on it.
 
-<b>queue.io</b> offers a way to make it simply, to create some iterators after and/or before the queue is entire and you can invert the iteration direction, before/after too (separately, for each iterator, for a same iterable)
+<b>queue.io</b> offers a way to make it simply, to create some iterators after and/or before the queue is entire and you can invert the iteration direction, before/after too (separately, for each iterator, for a same queue)
 
 
 ## Install :
@@ -18,21 +18,21 @@ This tool is useful when in combination of your asynchronous operations, when yo
 
 ## Reference :
 
-### Create an iterable :
+### Create an queue :
 
 ```JavaScript
-var iterable;
+var queue;
 
-iterable = queue(eventEmitter, [eventName = 'value']);
+queue = Queue(eventEmitter, [eventName = 'value']);
 // or
-iterable = queue.enqueue(arrayLike, [eventName = 'value']);
+queue = Queue.from(arrayLike, [eventName = 'value']);
 ```
 
 #### Notes :
-* An iterable is an object that awaits 2 event types :
-  * eventName to fill the iterable
-  * `done` (once) to indicate a done state to all the iterable iterators
-* `queue.enqueue(arrayLike)` creates an auto-done iterable, it must be an array-like object<br />
+* An queue is an object that awaits 2 event types :
+  * eventName to fill the queue
+  * `done` (once) to indicate a done state to all the queue iterators
+* `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
 
 ### Directions :
@@ -45,7 +45,7 @@ iterable = queue.enqueue(arrayLike, [eventName = 'value']);
 ```JavaScript
 var iterator;
 
-iterator = iterable.iterate([direction = queue.NEXT]);
+iterator = queue.iterate([direction = queue.NEXT]);
 ```
 
 ### Iterator events :
@@ -53,29 +53,29 @@ iterator = iterable.iterate([direction = queue.NEXT]);
 * `eventName` :
   * `value'    : the current value
   * `next`     : a method to jump to the next iteration
-  * `iterable` : the current iterable
+  * `queue` : the current queue
 
 * `done` :
-  * `iterable` : the current iterable
+  * `queue` : the current queue
 
 #### Note :
-* `eventName` is related to the `eventName` passed at the iterable creation (default : 'value')
+* `eventName` is related to the `eventName` passed at the queue creation (default : 'value')
 
 ### Fill a queue :
 
 ```JavaScript
 var EventEmitter,
-    queue,
+    Queue,
     eventName,
     eventEmitter,
-    iterable;
+    queue;
 
 EventEmitter = require('events').EventEmitter;
-queue = require('queue.io');
+Queue = require('queue.io');
 
 eventName = 'value'; // the default event name
 eventEmitter = new EventEmitter();
-iterable = queue(eventEmitter, eventName);
+queue = Queue(eventEmitter, eventName);
 
 eventEmitter.emit(eventName, 1);
 eventEmitter.emit(eventName, 2);
@@ -89,21 +89,21 @@ eventEmitter.emit('done');
 ```JavaScript
 var iterator;
 
-iterator = iterable.iterate();
+iterator = queue.iterate();
 
-iterator.on(eventName, function onvalue(value, next, iterable) {
-    console.log('Iteration value = %d on :', value, iterable);
+iterator.on(eventName, function onvalue(value, next, queue) {
+    console.log('Iteration value = %d on :', value, queue);
 
     next();
 });
 
-iterator.on('done', function (iterable) {
-    console.log('Iterator done on :', iterable);
+iterator.on('done', function (queue) {
+    console.log('Iterator done on :', queue);
 });
 ```
 
 #### Note :
-* The iterator creation isn't dependent to the iterable state, then you can create them before and/or after the iterable done state
+* The iterator creation isn't dependent to the queue state, then you can create them before and/or after the queue done state
 
 
 ## Requirements :

@@ -3,7 +3,7 @@ void function () {
     
     var EventEmitter,
         fs,
-        queue,
+        Queue,
         enqueue,
         readdir,
         stat,
@@ -14,9 +14,8 @@ void function () {
     
     EventEmitter = require('events').EventEmitter;
     fs = require('fs');
-    queue = require('queue.io');
+    Queue = require('queue.io');
     
-    enqueue = queue.enqueue;
     readdir = fs.readdir;
     stat = fs.stat;
     
@@ -31,8 +30,8 @@ void function () {
             process.exit();
         }
         
-        // queue.enqueue demo
-        fileIterator = enqueue(files, 'file').iterate();
+        // Queue.from demo
+        fileIterator = Queue.from(files, 'file').iterate();
         fileIterator.on('file', onfile);
         fileIterator.on('done', eventEmitter.emit.bind(eventEmitter, 'done'));
     };
@@ -53,9 +52,9 @@ void function () {
         next();
     };
     
-    void function () { // the real demo
+    void function () { // the queue demo
         var onstats,
-            dirStats,
+            queue,
             statIterator;
         
         onstats = function onstats(stats, next) {
@@ -64,8 +63,8 @@ void function () {
             next();
         };
             
-        dirStats = queue(eventEmitter, 'stats');
-        statIterator = dirStats.iterate();// try me with a queue.PREV argument
+        queue = Queue(eventEmitter, 'stats');
+        statIterator = queue.iterate();// try me with a Queue.PREV argument
         
         statIterator.on('stats', onstats);
         statIterator.on('done', console.log.bind(console, 'statIterator is done'));
