@@ -119,5 +119,13 @@ Simply use the browserified version
 
 ```HTML
 <script src="https://raw.githubusercontent.com/Lcfvs/queue.io/master/queue.io.browserified.js"></script>
-<script src="your-script-path.js"></script>
+<script>
+var EventEmitter,
+    Queue;
+
+EventEmitter = require('events').EventEmitter;
+Queue = require('queue.io');
+
+// ...
+</script>
 ```
