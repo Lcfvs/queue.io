@@ -6,7 +6,7 @@
 
 An events based queue iteration JavaScript module, under the MIT license.
 
-This tool is useful when in combination of your asynchronous operations, when you need to wait the entire queue to iterate on it.
+This tool is useful when in combination of your asynchronous operations, when you need to wait the entire queue to create some iterators on it.
 
 <b>queue.io</b> offers a way to make it simply, to create some iterators after and/or before the queue is entire and you can invert the iteration direction, before/after too (separately, for each iterator, for a same queue)
 
@@ -37,8 +37,8 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 
 ### Directions :
 
-* `queue.NEXT` : used to indicate the direction to the current iterator, first -> last
-* `queue.PREV` : used to indicate the direction to the current iterator, last -> first
+* `Queue.NEXT` : used to indicate the direction to the current iterator, first -> last
+* `Queue.PREV` : used to indicate the direction to the current iterator, last -> first
 
 ### Create an iterator :
 
