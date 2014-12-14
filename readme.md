@@ -34,6 +34,7 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
   * `done` (once) to indicate a done state to all the queue iterators
 * `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
+* An error event sent to the eventEmitter, first argument of `Queue(eventEmitter, [eventName = 'value'])` is relayed on the queue itself
 
 ### Directions :
 
