@@ -4,7 +4,7 @@
   "description": "An events based queue iteration JavaScript module",
   "homepage": "https://github.com/Lcfvs/",
   "keywords": ["queue", "iterable", "iteration", "iterator", "iterate", "event", "evented", "asynchronous"],
-  "version": "2.0.3",
+  "version": "2.0.4",
   "repository": {
     "type": "git",
     "url": "git://github.com/Lcfvs/queue.io.git"

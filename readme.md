@@ -29,12 +29,13 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 ```
 
 #### Notes :
-* An queue is an object that awaits 2 event types :
+* The eventEmitter, first argument of `Queue(eventEmitter, [eventName = 'value'])`, awaits 2 event types :
   * `eventName` to fill the queue
   * `done` (once) to indicate a done state to all the queue iterators
+* When eventEmitter receives the done event, it removes the value listeners and starts the iterations, on each iterator, if any
 * `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
-* An error event sent to the eventEmitter, first argument of `Queue(eventEmitter, [eventName = 'value'])` is relayed on the queue itself
+* An error event sent to the eventEmitter is relayed on the queue itself
 
 ### Directions :
 
