@@ -47,7 +47,7 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 ```JavaScript
 var iterator;
 
-iterator = queue.iterate([direction = queue.NEXT]);
+iterator = queue.iterate([direction = Queue.NEXT]);
 ```
 
 ### Iterator events :
