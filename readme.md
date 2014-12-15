@@ -18,7 +18,7 @@ This tool is useful when in combination of your asynchronous operations, when yo
 
 ## Reference :
 
-### Create an queue :
+### Create a queue :
 
 ```JavaScript
 var queue;
@@ -35,7 +35,7 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 * When eventEmitter receives the done event, it removes the value listeners and starts the iterations, on each iterator, if any
 * `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
-* An error event sent to the eventEmitter is relayed on the queue itself
+* An `error` event sent to the eventEmitter is relayed on the queue itself
 
 ### Directions :
 
