@@ -528,7 +528,7 @@ Queue = (function (global) {
                         iterationValues.reverse();
                     }
                 }
-                
+
                 defer(function () {
                     if (index >= iterationValues.length) {
                         iterator.emit('done', queue);
