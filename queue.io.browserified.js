@@ -514,33 +514,48 @@ Queue = (function (global) {
         Iterator = function Iterator(values, event, queue, direction) {
             var index,
                 iterator,
-                next,
+                getNext,
                 iterationValues;
 
             index = 0;
             iterator = new EventEmitter();
 
-            next = function next() {
-                if (!iterationValues) {
-                    iterationValues = values.slice(0);
+            getNext = function getNext() {
+                var next,
+                    isReached;
+                
+                next = function next() {
+                    if (!iterationValues) {
+                        iterationValues = values.slice(0);
 
-                    if (direction === Queue.PREV) {
-                        iterationValues.reverse();
-                    }
-                }
-
-                defer(function () {
-                    if (index >= iterationValues.length) {
-                        iterator.emit('done', queue);
-                    } else {
-                        iterator.emit(event, iterationValues[index], next, queue);
+                        if (direction === Queue.PREV) {
+                            iterationValues.reverse();
+                        }
                     }
 
-                    index += 1;
-                });
+                    if (!isReached) {
+                        defer(function () {
+                            var value;
+                            
+                            if (index >= iterationValues.length) {
+                                iterator.emit('done', queue);
+                            } else {
+                                value = iterationValues[index];
+                                
+                                iterator.emit(event, value, getNext(), queue);
+                            }
+
+                            index += 1;
+                        });
+                        
+                        isReached = true;
+                    }
+                };
+                
+                return next;
             };
 
-            values.next = next;
+            values.next = getNext();
 
             return iterator;
         };
@@ -564,9 +579,9 @@ Queue = (function (global) {
         return Queue;
     };
 
-    if (typeof define == 'function' && typeof define.amd == 'object') {
+    if (typeof define === 'function' && typeof define.amd) {
         define(main);
-    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+    } else if (typeof module === 'object' && typeof module.exports) {
         return module.exports = main(require);
     }
 
