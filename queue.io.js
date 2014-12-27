@@ -12,14 +12,25 @@ Queue = (function (global) {
 
     main = function main(require, exports, module) {
         var EventEmitter,
+            NEXT,
+            PREV,
             originalGlobalValue,
             defer,
             Queue,
-            onQueuevalue,
-            onQueuedone,
+            parseDirection,
+            parseEmitter,
+            parseEvent,
+            parse,
+            run,
             Iterator;
 
         EventEmitter = require('events').EventEmitter;
+
+        NEXT = {};
+        PREV = {};
+
+        Object.freeze(NEXT);
+        Object.freeze(PREV);
 
         originalGlobalValue = typeof exports === 'object'
         && exports;
@@ -32,47 +43,101 @@ Queue = (function (global) {
 
         Queue = function Queue(emitter, event) {
             var queue,
-                values,
-                eventName,
-                handler,
-                onvalue,
-                ondone,
-                onerror;
+                sources,
+                handler;
 
             queue = this instanceof Queue
                 ? this
                 : Object.create(Queue.prototype);
 
-            values = [];
-
-            eventName = event
-            || 'value';
+            sources = [];
 
             handler = {
-                done: false
+                pending: 0,
+                emitter: new EventEmitter(),
+                event: parseEvent(event, emitter),
+                queue: queue,
+                sources: sources,
+                values: []
             };
 
-            onvalue = onQueuevalue.bind(values);
-            ondone = onQueuedone.bind(emitter, handler, eventName, onvalue);
-            onerror = queue.emit.bind(queue, 'error');
-
-            emitter.on(eventName, onvalue);
-            emitter.once('done', ondone);
-            emitter.once('error', onerror);
-
             queue.iterate = function iterate(direction) {
-                var iterator;
+                var values,
+                    iterator;
 
-                iterator = Iterator(values, eventName, queue, direction);
+                values = handler.values;
+                iterator = Iterator(values, handler.event, queue, direction);
 
-                if (handler.done) {
+                if (handler.isTicked && !handler.pending) {
                     defer(values.next);
                 } else {
-                    emitter.once('done', values.next);
+                    handler.emitter.once('done', values.next);
                 }
 
                 return iterator;
             };
+
+            queue.append = function append(queue, event, direction) {
+                var source;
+
+                if (!handler.isTicked || handler.pending) {
+                    source = parse(handler, queue, event, direction);
+
+                    sources.push(source);
+
+                    if (sources.length === 1) {
+                        source.run();
+                    }
+                }
+
+                return queue;
+            };
+
+            queue.listen = function listen(queue, event, direction) {
+                var source;
+
+                if (!handler.isTicked || handler.pending) {
+                    source = parse(handler, queue, event, direction);
+
+                    source.run();
+                }
+
+                return queue;
+            };
+
+            queue.intercept = function intercept(callback, event, direction) {
+                if (!handler.isTicked || handler.pending) {
+                    handler.pending += 1;
+
+                    return function (error, values) {
+                        if (error) {
+                            return handler.queue.emit('error', error);
+                        }
+
+                        if (values instanceof Queue) {
+                            callback.call(handler.queue, values, event, direction);
+                        } else if (values instanceof EventEmitter) {
+                            callback.call(handler.queue, Queue(values, event), event, direction);
+                        } else {
+                            callback.call(handler.queue, Queue.from(values), parseDirection(event, direction));
+                        }
+
+                        handler.pending -= 1;
+                    };
+                }
+            };
+
+            if (parseEmitter(emitter)) {
+                queue.listen(emitter, event);
+            }
+
+            defer(function () {
+                handler.isTicked = true;
+
+                if (!handler.pending) {
+                    handler.emitter.emit('done');
+                }
+            });
 
             return queue;
         };
@@ -85,37 +150,125 @@ Queue = (function (global) {
             }
         });
 
-        Queue.from = function from(values, eventName) {
+        Queue.from = function from(values, event) {
             var index,
                 length,
-                valueEmitter,
-                queue,
-                value;
+                emitter,
+                eventName,
+                queue;
 
             index = 0;
             length = values.length;
-            valueEmitter = new EventEmitter();
-            queue = Queue(valueEmitter, eventName);
+            emitter = new EventEmitter();
+            eventName = parseEvent(event);
+            queue = Queue(emitter, eventName);
 
             for (; index < length; index += 1) {
-                value = values[index];
-
-                valueEmitter.emit(eventName || 'value', value);
+                emitter.emit(eventName, values[index]);
             }
 
-            valueEmitter.emit('done');
+            emitter.emit('done');
 
             return queue;
         };
 
-        onQueuevalue = function onQueuevalue(value) {
-            this.push(value);
+        parseDirection = function parseDirection(direction, extra) {
+            return direction === NEXT
+            || direction === PREV
+                ? direction
+                : extra === NEXT
+                || extra === PREV
+                    ? extra
+                    : NEXT;
         };
 
-        onQueuedone = function onQueuedone(handler, event, listener) {
-            this.removeListener(event, listener);
+        parseEmitter = function parseEmitter(emitter) {
+            if (emitter instanceof EventEmitter) {
+                return emitter;
+            }
+        };
 
-            handler.done = true;
+        parseEvent = function parseEvent(event, extra) {
+            return typeof event === 'string'
+                ? event
+                : typeof extra === 'string'
+                    ? extra
+                    : 'value';
+        };
+
+        parse = function parse(handler, emitter, event, direction) {
+            handler.pending += 1;
+
+            return {
+                direction: parseDirection(direction, event),
+                emitter: parseEmitter(emitter),
+                event: parseEvent(event),
+                handler: handler,
+                run: run
+            };
+        };
+
+        run = function run() {
+            var source,
+                emitter,
+                event,
+                handler,
+                queue,
+                sources,
+                values,
+                onvalue;
+
+            source = this;
+
+            emitter = source.emitter;
+            event = source.event;
+            handler = source.handler;
+
+            queue = handler.queue;
+            sources = handler.sources;
+            values = handler.values;
+
+            if (emitter instanceof Queue) {
+                emitter = emitter.iterate(source.direction);
+            }
+
+            onvalue = function onvalue(value, next) {
+                values.push(value);
+
+                if (next) {
+                    next();
+                }
+            };
+
+            emitter.on(event, onvalue);
+
+            emitter.once('done', function () {
+                var sources,
+                    next;
+
+                emitter.removeListener(event, onvalue);
+
+                handler.pending -= 1;
+                sources = handler.sources;
+
+                if (sources[0] === source) {
+                    sources.shift();
+
+                    next = handler.sources[0];
+
+                    if (next) {
+                        next.run();
+                    }
+                }
+
+                defer(function () {
+                    if (handler.isTicked && !handler.pending && !handler.sources.length) {
+                        handler.emitter.emit('done');
+                    }
+                });
+            });
+
+            emitter.once('error', queue.emit.bind(queue, 'error'));
         };
 
         Iterator = function Iterator(values, event, queue, direction) {
@@ -130,35 +283,47 @@ Queue = (function (global) {
             getNext = function getNext() {
                 var next,
                     isReached;
-                
+
                 next = function next() {
+                    var args;
+
                     if (!iterationValues) {
                         iterationValues = values.slice(0);
 
-                        if (direction === Queue.PREV) {
+                        if (direction === PREV) {
                             iterationValues.reverse();
                         }
                     }
 
                     if (!isReached) {
+                        args = Array.prototype.slice.call(arguments, 0);
+
                         defer(function () {
                             var value;
-                            
+
                             if (index >= iterationValues.length) {
                                 iterator.emit('done', queue);
                             } else {
                                 value = iterationValues[index];
-                                
-                                iterator.emit(event, value, getNext(), queue);
+
+                                if (typeof value === 'function') {
+                                    value = (function() {
+                                        return value;
+                                    }());
+                                }
+
+                                args.unshift(event, value, getNext(), queue);
+
+                                iterator.emit.apply(iterator, args);
                             }
 
                             index += 1;
                         });
-                        
+
                         isReached = true;
                     }
                 };
-                
+
                 return next;
             };
 
@@ -168,12 +333,12 @@ Queue = (function (global) {
         };
 
         Object.defineProperty(Queue, 'NEXT', {
-            value: {},
+            value: NEXT,
             enumerable: true
         });
 
         Object.defineProperty(Queue, 'PREV', {
-            value: {},
+            value: PREV,
             enumerable: true
         });
 
@@ -186,9 +351,9 @@ Queue = (function (global) {
         return Queue;
     };
 
-    if (typeof define === 'function' && typeof define.amd) {
+    if (typeof define === 'function' && define.amd) {
         define(main);
-    } else if (typeof module === 'object' && typeof module.exports) {
+    } else if (typeof module === 'object' && module.exports) {
         return module.exports = main(require);
     }
 

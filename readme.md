@@ -18,14 +18,12 @@ This tool is useful when in combination of your asynchronous operations, when yo
 
 ## Reference :
 
-### Create a queue :
+### Queue([eventEmitter], [eventName = 'value']) :
 
 ```JavaScript
 var queue;
 
-queue = Queue(eventEmitter, [eventName = 'value']);
-// or
-queue = Queue.from(arrayLike, [eventName = 'value']);
+queue = Queue();
 ```
 
 #### Notes :
@@ -36,25 +34,39 @@ queue = Queue.from(arrayLike, [eventName = 'value']);
 * `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />
   (Array, DOM NodeList, ...)
 * An `error` event sent to the eventEmitter is relayed on the queue itself
+* A queue created without eventEmitter is empty and auto-dones at the next tick if no queues are joined by intercept/listen/append
+
+
+### Queue.from(iterable, [eventName = 'value']) :
+```JavaScript
+var queue;
+
+queue = Queue.from([1, 2, 3]);
+queue = Queue.from('test');
+queue = Queue.from(document.getElementsByTagName('*'));
+```
+
 
 ### Directions :
 
 * `Queue.NEXT` : used to indicate the direction to the current iterator, first -> last
 * `Queue.PREV` : used to indicate the direction to the current iterator, last -> first
 
-### Create an iterator :
+
+### queue.iterate([direction = Queue.NEXT]) :
 
 ```JavaScript
 var iterator;
 
-iterator = queue.iterate([direction = Queue.NEXT]);
+iterator = queue.iterate();
 ```
+
 
 ### Iterator events :
 
 * `eventName` :
-  * `value'    : the current value
-  * `next`     : a method to jump to the next iteration
+  * `value' : the current value
+  * `next`  : a method to jump to the next iteration
   * `queue` : the current queue
 
 * `done` :
@@ -62,6 +74,7 @@ iterator = queue.iterate([direction = Queue.NEXT]);
 
 #### Note :
 * `eventName` is related to the `eventName` passed at the queue creation (default : 'value')
+
 
 ### Fill a queue :
 
@@ -86,7 +99,67 @@ eventEmitter.emit(eventName, 3);
 eventEmitter.emit('done');
 ```
 
-### Listen an iterator :
+
+### queue.append(queue, [event = 'value'], [direction = Queue.NEXT]) :
+
+Appends a queue to an another, after its last value
+
+```JavaScript
+var queue;
+
+queue = Queue.from([1, 2, 3]);
+
+queue.append(Queue.from([4, 5, 6]));
+queue.append(Queue.from([7, 8, 9]));
+
+/* queue values :
+1, 2, 3, 4, 5, 6, 7, 8, 9
+*/
+```
+
+
+### queue.listen(queue, [event = 'value'], [direction = Queue.NEXT]) :
+
+Same as queue.append but this method adds its values FIFO
+
+```JavaScript
+var queue;
+
+queue = Queue.from([1, 2, 3]);
+
+queue.listen(Queue.from([4, 5, 6]));
+queue.append(Queue.from([7, 8, 9]));
+
+/* queue values :
+1, 2, 3, 4, 7, 5, 8, 6, 9
+*/
+```
+
+
+### queue.intercept(callback, [event = 'value'], [direction = Queue.NEXT]) :
+
+This method sends a callback based async function response to the callback argument
+
+If that function returns an error, queue.intercept sends the error to the queue itself
+
+```JavaScript
+var fs,
+    queue;
+
+fs = require('fs');
+
+queue = Queue();
+
+fs.readdir('.', queue.intercept(queue.append)); // sends the values to the current queue like queue.append
+fs.readdir('.', queue.intercept(queue.listen)); // sends the values to the current queue like queue.listen
+
+queue.on('error', function (error) {
+    // fired if no readable directory
+});
+```
+
+
+### The iteration :
 
 ```JavaScript
 var iterator;
