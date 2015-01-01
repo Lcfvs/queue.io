@@ -1,10 +1,22 @@
 {
-  "author": "Lcf.vs <michael.rouges@gmail.com>",
+  "author": {
+    "name": "Lcf.vs",
+    "email": "michael.rouges@gmail.com"
+  },
   "name": "queue.io",
   "description": "An events based queue iteration JavaScript module",
   "homepage": "https://github.com/Lcfvs/",
-  "keywords": ["queue", "iterable", "iteration", "iterator", "iterate", "event", "evented", "asynchronous"],
-  "version": "2.2.0",
+  "keywords": [
+    "queue",
+    "iterable",
+    "iteration",
+    "iterator",
+    "iterate",
+    "event",
+    "evented",
+    "asynchronous"
+  ],
+  "version": "2.3.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Lcfvs/queue.io.git"
@@ -14,5 +26,15 @@
     "node": "*"
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "gitHead": "228173f4c62ec0f3519f6383f9cf6658f6867d66",
+  "readme": "# queue.io\r\n\r\n[![Actual version published on NPM](https://badge.fury.io/js/queue.io.png)](https://www.npmjs.org/package/queue.io)\r\n[![npm module downloads per month](http://img.shields.io/npm/dm/queue.io.svg)](https://www.npmjs.org/package/queue.io)\r\n[![npm module dependencies](https://david-dm.org/Lcfvs/queue.io.png)](https://www.npmjs.org/package/queue.io)\r\n\r\nAn events based queue iteration JavaScript module, under the MIT license.\r\n\r\nThis tool is useful when in combination of your asynchronous operations, when you need to wait the entire queue to create some iterators on it.\r\n\r\n<b>queue.io</b> offers a way to make it simply, to create some iterators after and/or before the queue is entire and you can invert the iteration direction, before/after too (separately, for each iterator, for a same queue)\r\n\r\n\r\n## Install :\r\n\r\n`npm install queue.io`\r\n\r\n\r\n## Reference :\r\n\r\n### Queue([eventEmitter], [eventName = 'value']) :\r\n\r\n```JavaScript\r\nvar queue;\r\n\r\nqueue = Queue();\r\n```\r\n\r\n#### Notes :\r\n* The eventEmitter, first argument of `Queue(eventEmitter, [eventName = 'value'])`, awaits 2 event types :\r\n  * `eventName` to fill the queue\r\n  * `done` (once) to indicate a done state to all the queue iterators\r\n* When eventEmitter receives the done event, it removes the value listeners and starts the iterations, on each iterator, if any\r\n* `Queue.from(arrayLike)` creates an auto-done queue, it must be an array-like object<br />\r\n  (Array, DOM NodeList, ...)\r\n* An `error` event sent to the eventEmitter is relayed on the queue itself\r\n* A queue created without eventEmitter is empty and auto-dones at the next tick if no queues are joined by intercept/listen/append\r\n\r\n\r\n### Queue.from(iterable, [eventName = 'value']) :\r\n```JavaScript\r\nvar queue;\r\n\r\nqueue = Queue.from([1, 2, 3]);\r\nqueue = Queue.from('test');\r\nqueue = Queue.from(document.getElementsByTagName('*'));\r\n```\r\n\r\n\r\n### Directions :\r\n\r\n* `Queue.NEXT` : used to indicate the direction to the current iterator, first -> last\r\n* `Queue.PREV` : used to indicate the direction to the current iterator, last -> first\r\n\r\n\r\n### queue.iterate([direction = Queue.NEXT]) :\r\n\r\n```JavaScript\r\nvar iterator;\r\n\r\niterator = queue.iterate();\r\n```\r\n\r\n\r\n### Iterator events :\r\n\r\n* `eventName` :\r\n  * `value' : the current value\r\n  * `next`  : a method to jump to the next iteration\r\n  * `queue` : the current queue\r\n\r\n* `done` :\r\n  * `queue` : the current queue\r\n\r\n#### Note :\r\n* `eventName` is related to the `eventName` passed at the queue creation (default : 'value')\r\n\r\n\r\n### Fill a queue :\r\n\r\n```JavaScript\r\nvar EventEmitter,\r\n    Queue,\r\n    eventName,\r\n    eventEmitter,\r\n    queue;\r\n\r\nEventEmitter = require('events').EventEmitter;\r\nQueue = require('queue.io');\r\n\r\neventName = 'value'; // the default event name\r\neventEmitter = new EventEmitter();\r\nqueue = Queue(eventEmitter, eventName);\r\n\r\neventEmitter.emit(eventName, 1);\r\neventEmitter.emit(eventName, 2);\r\neventEmitter.emit(eventName, 3);\r\n\r\neventEmitter.emit('done');\r\n```\r\n\r\n\r\n### queue.append(queue, [event = 'value'], [direction = Queue.NEXT]) :\r\n\r\nAppends a queue to an another, after its last value\r\n\r\n```JavaScript\r\nvar queue;\r\n\r\nqueue = Queue.from([1, 2, 3]);\r\n\r\nqueue.append(Queue.from([4, 5, 6]));\r\nqueue.append(Queue.from([7, 8, 9]));\r\n\r\n/* queue values :\r\n1, 2, 3, 4, 5, 6, 7, 8, 9\r\n*/\r\n```\r\n\r\n\r\n### queue.listen(queue, [event = 'value'], [direction = Queue.NEXT]) :\r\n\r\nSame as queue.append but this method adds its values FIFO\r\n\r\n```JavaScript\r\nvar queue;\r\n\r\nqueue = Queue.from([1, 2, 3]);\r\n\r\nqueue.listen(Queue.from([4, 5, 6]));\r\nqueue.append(Queue.from([7, 8, 9]));\r\n\r\n/* queue values :\r\n1, 2, 3, 4, 7, 5, 8, 6, 9\r\n*/\r\n```\r\n\r\n\r\n### queue.intercept(callback, [event = 'value'], [direction = Queue.NEXT]) :\r\n\r\nThis method sends a callback based async function response to the callback argument\r\n\r\nIf that function returns an error, queue.intercept sends the error to the queue itself\r\n\r\n```JavaScript\r\nvar fs,\r\n    queue;\r\n\r\nfs = require('fs');\r\n\r\nqueue = Queue();\r\n\r\nfs.readdir('.', queue.intercept(queue.append)); // sends the values to the current queue like queue.append\r\nfs.readdir('.', queue.intercept(queue.listen)); // sends the values to the current queue like queue.listen\r\n\r\nqueue.on('error', function (error) {\r\n    // fired if no readable directory\r\n});\r\n```\r\n\r\n\r\n### The iteration :\r\n\r\n```JavaScript\r\nvar iterator;\r\n\r\niterator = queue.iterate();\r\n\r\niterator.on(eventName, function onvalue(value, next, queue) {\r\n    console.log('Iteration value = %d on :', value, queue);\r\n\r\n    next();\r\n});\r\n\r\niterator.on('done', function (queue) {\r\n    console.log('Iterator done on :', queue);\r\n});\r\n```\r\n\r\n#### Note :\r\n* The iterator creation isn't dependent to the queue state, then you can create them before and/or after the queue done state\r\n\r\n\r\n## Requirements :\r\n\r\n* ES5 support\r\n\r\n\r\n## Browser-side :\r\n\r\nSimply use the browserified version\r\n\r\n```HTML\r\n<script src=\"https://raw.githubusercontent.com/Lcfvs/queue.io/master/queue.io.browserified.js\"></script>\r\n<script>\r\nvar EventEmitter,\r\n    Queue;\r\n\r\nEventEmitter = require('events').EventEmitter;\r\nQueue = require('queue.io');\r\n\r\n// ...\r\n</script>\r\n```",
+  "readmeFilename": "readme.md",
+  "bugs": {
+    "url": "https://github.com/Lcfvs/queue.io/issues"
+  },
+  "_id": "queue.io@2.2.0",
+  "scripts": {},
+  "_shasum": "97dc6b755313f2c03c86867b42b6e745a0947b19",
+  "_from": "queue.io"
 }

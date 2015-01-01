@@ -60,6 +60,8 @@ Queue = (function (global) {
                 sources: sources,
                 values: []
             };
+            
+            handler.emitter.once('done', queue.emit.bind(queue, 'done'));
 
             queue.iterate = function iterate(direction) {
                 var values,

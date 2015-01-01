@@ -35,6 +35,7 @@ queue = Queue();
   (Array, DOM NodeList, ...)
 * An `error` event sent to the eventEmitter is relayed on the queue itself
 * A queue created without eventEmitter is empty and auto-dones at the next tick if no queues are joined by intercept/listen/append
+* A queue emits a `done` event when full-filled
 
 
 ### Queue.from(iterable, [eventName = 'value']) :
